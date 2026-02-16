@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.db.database import init_db, SessionLocal
-from app.api import auth, documents, users
+from fastapi.staticfiles import StaticFiles
+import os
 
-app = FastAPI(title="Railways HR System API", version="1.0.0", docs_url="/docs")
+from app.db.database import init_db, SessionLocal
+from app.api import auth, documents, users, warid, sadir, import_excel
+
+app = FastAPI(title="Railways HR System API", version="2.0.0", docs_url="/docs")
 
 app.add_middleware(
     CORSMiddleware,
@@ -13,9 +16,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# إنشاء مجلدات التحميل
+os.makedirs("uploads/warid", exist_ok=True)
+os.makedirs("uploads/sadir", exist_ok=True)
+os.makedirs("templates", exist_ok=True)
+
+# تقديم الملفات المرفقة
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(users.router)
+app.include_router(warid.router)
+app.include_router(sadir.router)
+app.include_router(import_excel.router)
 
 
 @app.on_event("startup")

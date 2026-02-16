@@ -79,7 +79,7 @@ async function handleLogin() {
 
   try {
     await authStore.login(form.value)
-    router.push('/dashboard')
+    router.push('/home')
   } catch (err) {
     error.value = 'اسم المستخدم أو كلمة المرور غير صحيحة'
   } finally {
