@@ -5,6 +5,7 @@ import os
 
 from app.db.database import init_db, SessionLocal
 from app.api import auth, documents, users, warid, sadir, import_excel
+from app.core.config import settings
 
 app = FastAPI(title="Railways HR System API", version="2.0.0", docs_url="/docs")
 
@@ -39,11 +40,9 @@ def startup_event():
     from app.core.security import hash_password
     db = SessionLocal()
     try:
-        if db.query(User).count() == 0:
-            db.add(User(username="admin", full_name="المدير العام", seclevel="admin", password=hash_password("admin123")))
-            db.add(User(username="user", full_name="مستخدم عادي", seclevel="user", password=hash_password("user123")))
+        if db.query(User).count() == 0 and settings.INITIAL_ADMIN_PASSWORD:
+            db.add(User(username=settings.INITIAL_ADMIN_USERNAME, full_name="المدير العام", seclevel="admin", password=hash_password(settings.INITIAL_ADMIN_PASSWORD)))
             db.commit()
-            print("Users created: admin/admin123, user/user123")
     finally:
         db.close()
 

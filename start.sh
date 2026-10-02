@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 echo "=== نظام إدارة المراسلات - السكك الحديدية ==="
 echo ""
 
@@ -34,7 +35,7 @@ echo "   Frontend: http://localhost:5173"
 echo "   Backend:  http://localhost:8000"
 echo "   API Docs: http://localhost:8000/docs"
 echo ""
-echo "   Login: admin / admin123"
+echo "   Login: use the configured INITIAL_ADMIN_USERNAME and INITIAL_ADMIN_PASSWORD"
 echo ""
 echo "Press Ctrl+C to stop..."
 

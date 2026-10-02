@@ -137,6 +137,28 @@ class Sadir(Base):
     creator = relationship("User", backref="sadir_documents")
 
 
+class Document(Base):
+    """Compatibility model for the existing /documents API."""
+    __tablename__ = "documents"
+    id = Column(Integer, primary_key=True, index=True)
+    doc_type = Column(String(20), nullable=False, index=True)
+    doc_number = Column(String(50), nullable=False, unique=True, index=True)
+    subject = Column(Text, nullable=False)
+    source = Column(String(200), nullable=True)
+    destination = Column(String(200), nullable=True)
+    date = Column(DateTime(timezone=True), nullable=False)
+    content = Column(Text, nullable=True)
+    file_path = Column(String(500), nullable=True)
+    file_name = Column(String(255), nullable=True)
+    file_type = Column(String(50), nullable=True)
+    status = Column(String(50), nullable=False, default="new")
+    priority = Column(String(20), nullable=False, default="normal")
+    notes = Column(Text, nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class DocumentHistory(Base):
     __tablename__ = "document_history"
     id = Column(Integer, primary_key=True, index=True)
