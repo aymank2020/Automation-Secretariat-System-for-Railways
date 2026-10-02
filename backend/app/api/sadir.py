@@ -8,7 +8,7 @@ import uuid
 from app.db.database import get_db
 from app.models import Sadir, User
 from app.schemas import SadirCreate, SadirUpdate, SadirResponse, SadirListResponse
-from app.core.security import get_current_user
+from app.api.dependencies import get_current_user
 
 router = APIRouter(prefix="/sadir", tags=["Sadir"])
 

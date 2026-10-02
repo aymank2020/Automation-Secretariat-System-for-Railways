@@ -8,7 +8,7 @@ import os
 from app.db.database import get_db
 from app.models import Warid, Sadir, User
 from app.schemas import ImportResponse, ImportPreview
-from app.core.security import get_current_user
+from app.api.dependencies import get_current_user
 
 router = APIRouter(prefix="/import", tags=["Import"])
 
@@ -133,7 +133,7 @@ async def import_warid_excel(
                 
             except Exception as e:
                 errors.append({
-                    'row': index + 2,  + 1 لأن الصف الأول هو العناوين
+                    'row': index + 2,  # الصف الأول هو العناوين
                     'error': str(e),
                     'data': row.to_dict()
                 })

@@ -5,6 +5,7 @@ from typing import List, Optional
 from datetime import datetime
 import os
 import shutil
+import uuid
 
 from app.db.database import get_db
 from app.models import Document, DocumentHistory, User
@@ -29,11 +30,11 @@ async def upload_pdf_document(
     """
     رفع ملف PDF ومعالجته تلقائياً باستخدام OCR
     """
-    if not file.filename.lower().endswith('.pdf'):
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="يرجى رفع ملف PDF فقط")
 
     # حفظ الملف
-    file_path = os.path.join(UPLOAD_DIR, f"{datetime.utcnow().timestamp()}_{file.filename}")
+    file_path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4().hex}.pdf")
     try:
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
@@ -45,7 +46,7 @@ async def upload_pdf_document(
         ocr_data = process_pdf_file(file_path)
         
         # إنشاء رقم مستند جديد
-        doc_number = f"{doc_type}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        doc_number = f"{doc_type}_{uuid.uuid4().hex}"
         
         # إنشاء المستند
         new_doc = Document(
@@ -69,6 +70,7 @@ async def upload_pdf_document(
         # تسجيل التاريخ
         db.add(DocumentHistory(
             document_id=new_doc.id,
+            document_type="document",
             action="uploaded_with_ocr",
             action_by=current_user.id,
             new_value=f"ملف PDF معالج بالـ OCR: {file.filename}"
@@ -92,7 +94,7 @@ def create_document(document: DocumentCreate, db: Session = Depends(get_db), cur
     db.add(new_doc)
     db.commit()
     db.refresh(new_doc)
-    db.add(DocumentHistory(document_id=new_doc.id, action="created", action_by=current_user.id, new_value=new_doc.subject))
+    db.add(DocumentHistory(document_id=new_doc.id, document_type="document", action="created", action_by=current_user.id, new_value=new_doc.subject))
     db.commit()
     return DocumentResponse.model_validate(new_doc)
 
@@ -138,7 +140,7 @@ def update_document(doc_id: int, document: DocumentUpdate, db: Session = Depends
         setattr(doc, key, value)
     db.commit()
     db.refresh(doc)
-    db.add(DocumentHistory(document_id=doc.id, action="updated", action_by=current_user.id, old_value=old))
+    db.add(DocumentHistory(document_id=doc.id, document_type="document", action="updated", action_by=current_user.id, old_value=old))
     db.commit()
     return DocumentResponse.model_validate(doc)
 
@@ -148,7 +150,7 @@ def delete_document(doc_id: int, db: Session = Depends(get_db), current_user: Us
     doc = db.query(Document).filter(Document.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="المستند غير موجود")
-    db.query(DocumentHistory).filter(DocumentHistory.document_id == doc_id).delete()
+    db.query(DocumentHistory).filter(DocumentHistory.document_id == doc_id, DocumentHistory.document_type == "document").delete()
     db.delete(doc)
     db.commit()
     return {"message": "تم حذف المستند بنجاح"}
@@ -156,4 +158,4 @@ def delete_document(doc_id: int, db: Session = Depends(get_db), current_user: Us
 
 @router.get("/{doc_id}/history")
 def get_document_history(doc_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(DocumentHistory).filter(DocumentHistory.document_id == doc_id).all()
+    return db.query(DocumentHistory).filter(DocumentHistory.document_id == doc_id, DocumentHistory.document_type == "document").all()
